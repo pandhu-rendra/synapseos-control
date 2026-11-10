@@ -2,3 +2,6 @@
 - [ ] Make the app have much variations of settings
 - [ ] Make app can install container for docker
 - [ ] Make more variations on container settings
+- [ ] Add a graph on overview
+- [ ] Add auto update system for docker or container
+- [ ] Make app can run without `npm run dev`
