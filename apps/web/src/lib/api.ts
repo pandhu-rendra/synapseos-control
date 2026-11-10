@@ -47,8 +47,8 @@ export type Container = {
 export type ContainerDetails = Container & {
   created: string
   ports: Array<{
-    privatePort: number
-    publicPort: number
+    private_port: number
+    public_port: number
     type: string
     ip: string
   }>

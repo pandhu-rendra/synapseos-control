@@ -118,10 +118,12 @@ func (provider *LocalProvider) InspectContainer(ctx context.Context, id string) 
 
 	container := result.Container
 	details := ContainerDetails{
-		ID:      container.ID,
-		Name:    container.Name,
-		Image:   container.Config.Image,
-		Created: container.Created,
+		ID:       container.ID,
+		Name:     container.Name,
+		Image:    container.Config.Image,
+		Created:  container.Created,
+		Ports:    make([]ContainerPort, 0),
+		Networks: make([]string, 0),
 	}
 	if details.Name != "" && details.Name[0] == '/' {
 		details.Name = details.Name[1:]

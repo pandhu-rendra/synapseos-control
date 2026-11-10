@@ -37,3 +37,7 @@ Set `SYNAPSEOS_API_TOKEN` when starting the API and set the same value as
 `VITE_API_TOKEN` for the web app. Health is public for startup checks; all
 Docker, container, and settings endpoints require this bearer token. The API
 binds to `127.0.0.1:8080` by default.
+
+The API also loads `apps/api/.env` automatically. Copy
+`apps/api/.env.example` to `.env` and keep that file untracked. The web app
+loads `apps/web/.env` through Vite.

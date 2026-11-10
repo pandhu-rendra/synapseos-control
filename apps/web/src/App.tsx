@@ -36,9 +36,9 @@ export function App() {
             </span>
           </NavLink>
           <div className="topbar-meta">
-            <span className="eyebrow">Local host</span>
+            <span className="eyebrow">Local Host</span>
             <span className="topbar-divider" />
-            <span className="mono text-xs text-muted">PHASE 6</span>
+            <span className="mono text-xs text-muted">PRODUCTION</span>
           </div>
         </div>
       </header>
@@ -116,7 +116,7 @@ function Overview() {
             Docker Engine on this host.
           </p>
         </div>
-        <span className="phase-label">Overview / 06</span>
+        <span className="phase-label">Overview / Status</span>
       </div>
       <div className="status-panel">
         <div className="status-panel-heading">
@@ -420,7 +420,7 @@ function Containers() {
             A live list of containers reported by your local Docker Engine.
           </p>
         </div>
-        <span className="phase-label">Phase / 02</span>
+        <span className="phase-label">Container / Manage</span>
       </div>
       <div className="flex flex-col gap-3 border-b border-white/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="eyebrow">Filter by state</p>
@@ -472,6 +472,26 @@ function Containers() {
 
 function ContainerCard({ container }: { container: Container }) {
   const isRunning = container.state === 'running'
+  const queryClient = useQueryClient()
+  const [actionError, setActionError] = useState('')
+  const mutation = useMutation({
+    mutationFn: (action: ContainerAction) => performContainerAction(container.id, action),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['containers'] })
+      setActionError('')
+    },
+    onError: (error: Error) => setActionError(error.message),
+  })
+  const runAction = (action: ContainerAction) => {
+    if ((action === 'stop' || action === 'restart') &&
+      !window.confirm(`${action === 'stop' ? 'Stop' : 'Restart'} ${container.name || 'this container'}?`)) {
+      return
+    }
+    setActionError('')
+    mutation.mutate(action)
+  }
+  const pendingAction = mutation.variables
+
   return (
     <article className={`container-card ${isRunning ? 'container-card-running' : ''}`}>
       <div className="container-card-main">
@@ -487,6 +507,19 @@ function ContainerCard({ container }: { container: Container }) {
       <div className="container-card-meta">
         <span className="mono container-id">{container.id.slice(0, 12)}</span>
         <span className="container-status">{container.status}</span>
+        <div className="container-card-actions">
+          <Link className="action-button action-button-small" to={`/containers/${container.id}`}>Manage</Link>
+          <button className="action-button action-button-small action-button-primary" disabled={mutation.isPending || isRunning} onClick={() => runAction('start')} type="button">
+            {pendingAction === 'start' ? 'Starting...' : 'Start'}
+          </button>
+          <button className="action-button action-button-small" disabled={mutation.isPending || !isRunning} onClick={() => runAction('stop')} type="button">
+            {pendingAction === 'stop' ? 'Stopping...' : 'Stop'}
+          </button>
+          <button className="action-button action-button-small" disabled={mutation.isPending} onClick={() => runAction('restart')} type="button">
+            {pendingAction === 'restart' ? 'Restarting...' : 'Restart'}
+          </button>
+        </div>
+        {actionError && <p aria-live="polite" className="text-xs text-danger">{actionError}</p>}
       </div>
     </article>
   )
@@ -535,18 +568,18 @@ function ContainerDetails() {
             <DetailItem label="Image" value={details.data.image} mono />
             <DetailItem label="Created" value={details.data.created} mono />
             <DetailItem label="Status" value={details.data.status} />
-            <DetailItem label="Networks" value={details.data.networks.join(', ') || 'None'} />
+            <DetailItem label="Networks" value={(details.data.networks ?? []).join(', ') || 'None'} />
           </div>
           <section aria-labelledby="ports-heading" className="details-section">
             <p className="eyebrow">Networking</p>
             <h2 className="section-title" id="ports-heading">Port mappings</h2>
-            {details.data.ports.length === 0 ? (
+            {(details.data.ports ?? []).length === 0 ? (
               <p className="mt-4 text-sm text-muted">No published ports reported.</p>
             ) : (
               <ul className="port-list">
-                {details.data.ports.map((port, index) => (
-                  <li className="port-item mono" key={`${port.privatePort}-${port.publicPort}-${index}`}>
-                    {port.ip || '*'}:{port.publicPort || 'internal'} → {port.privatePort}/{port.type}
+                {(details.data.ports ?? []).map((port, index) => (
+                  <li className="port-item mono" key={`${port.private_port}-${port.public_port}-${index}`}>
+                    {port.ip || '*'}:{port.public_port || 'internal'} → {port.private_port}/{port.type}
                   </li>
                 ))}
               </ul>

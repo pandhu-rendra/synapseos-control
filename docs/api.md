@@ -72,6 +72,9 @@ Returns all containers from Docker Engine. Use the optional `state` query
 parameter to filter by `created`, `running`, `paused`, `restarting`, `removing`,
 `exited`, or `dead`.
 
+The web interface exposes start, stop, restart, details, port mappings, and
+bounded logs from each container's management view.
+
 ```json
 {
   "data": [

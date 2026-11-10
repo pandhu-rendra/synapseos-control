@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -21,6 +24,8 @@ type config struct {
 }
 
 func main() {
+	loadDotEnv(".env")
+	loadDotEnv(filepath.Join("apps", "api", ".env"))
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	cfg := config{
 		address:        getenv("SYNAPSEOS_API_ADDRESS", "127.0.0.1:8080"),
@@ -73,4 +78,29 @@ func getenv(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+func loadDotEnv(path string) {
+	file, err := os.Open(path)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		key, value, found := strings.Cut(line, "=")
+		if !found || strings.TrimSpace(key) == "" {
+			continue
+		}
+		key = strings.TrimSpace(key)
+		value = strings.Trim(strings.TrimSpace(value), `"'`)
+		if os.Getenv(key) == "" {
+			_ = os.Setenv(key, value)
+		}
+	}
 }

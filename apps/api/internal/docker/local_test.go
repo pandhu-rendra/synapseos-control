@@ -84,4 +84,15 @@ func TestValidateSettingsAcceptsUnixSocket(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("expected unix socket to be accepted: %v", err)
 	}
+
+}
+
+func TestInspectDetailsUseEmptyCollections(t *testing.T) {
+	details := ContainerDetails{
+		Ports:    make([]ContainerPort, 0),
+		Networks: make([]string, 0),
+	}
+	if details.Ports == nil || details.Networks == nil {
+		t.Fatal("expected inspect collections to be non-nil")
+	}
 }

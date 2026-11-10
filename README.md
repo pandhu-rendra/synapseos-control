@@ -27,7 +27,8 @@ Start the API:
 
 ```bash
 cd apps/api
-export SYNAPSEOS_API_TOKEN='your-token'
+cp .env.example .env
+# Set SYNAPSEOS_API_TOKEN in .env
 go run ./cmd/server
 ```
 
@@ -43,7 +44,8 @@ The API listens on `http://localhost:8080` and the web app on
 `http://localhost:5173`.
 
 Set `SYNAPSEOS_API_TOKEN` for the API and the matching `VITE_API_TOKEN` in
-the frontend environment. The API binds to localhost by default.
+the frontend environment. The API loads `apps/api/.env` automatically and
+binds to localhost by default. Keep the two token values identical.
 
 Set `VITE_API_BASE_URL` when the API uses another address. See
 `apps/web/.env.example`.
