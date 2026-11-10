@@ -1,3 +1,4 @@
 - [ ] Make the app can connect remote to another docker in another instance/server
 - [ ] Make the app have much variations of settings
 - [ ] Make app can install container for docker
+- [ ] Make more variations on container settings
