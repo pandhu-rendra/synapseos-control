@@ -1,0 +1,17 @@
+# Go
+apps/api/bin/
+
+# Node
+apps/web/node_modules/
+apps/web/dist/
+apps/web/.vite/
+
+# Local environment
+.env
+.env.local
+!.env.example
+
+# Editor and OS
+.DS_Store
+.vscode/*
+!.vscode/settings.json
