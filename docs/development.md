@@ -2,9 +2,10 @@
 
 ## Current phase
 
-Phase 0 establishes the Go API, React/Vite frontend, routing, configuration,
-logging, health communication, and documentation. Docker integration is not
-implemented yet.
+Phase 6 adds the Overview dashboard using real Docker status and info data.
+It shows connection state, engine identity, resource counts, stopped-container
+attention, and host information. Runtime Docker settings are now available for
+the local Unix socket and timeout. Phase 7 covers final quality assurance.
 
 ## Validation
 
@@ -27,5 +28,6 @@ npm run lint
 npm run build
 ```
 
-Docker integration tests cannot run until Docker is available in the
-development environment.
+Real Docker integration tests cannot run until Docker is available in the
+development environment. Isolated provider and HTTP handler tests still run
+without a daemon.

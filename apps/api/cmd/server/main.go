@@ -9,19 +9,36 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/synapseos/synapseos-control/apps/api/internal/docker"
 )
 
 type config struct {
-	address string
+	address        string
+	dockerHost     string
+	requestTimeout time.Duration
 }
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	cfg := config{address: getenv("SYNAPSEOS_API_ADDRESS", ":8080")}
+	cfg := config{
+		address:        getenv("SYNAPSEOS_API_ADDRESS", ":8080"),
+		dockerHost:     getenv("DOCKER_HOST", "unix:///var/run/docker.sock"),
+		requestTimeout: 10 * time.Second,
+	}
+	dockerProvider, err := docker.NewManager(docker.Settings{
+		Host:    cfg.dockerHost,
+		Timeout: int(cfg.requestTimeout / time.Second),
+	})
+	if err != nil {
+		logger.Error("docker provider initialization failed", "error", err)
+		os.Exit(1)
+	}
+	defer dockerProvider.Close()
 
 	server := &http.Server{
 		Addr:              cfg.address,
-		Handler:           newRouter(),
+		Handler:           newRouter(dockerProvider),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

@@ -2,8 +2,11 @@
 
 SynapseOS Control is a local-first Docker management application.
 
-Phase 0 provides the Go API foundation and React frontend shell. Docker
-integration is intentionally not included yet.
+Phase 6 provides a Go API foundation, React frontend shell, a real local
+Docker Engine connection, live container listing, non-secret container
+details, lifecycle actions, bounded container logs, and a real-data overview
+dashboard. Runtime settings can update the local Unix socket and request
+timeout in memory. Phase 7 covers final quality assurance.
 
 ## Requirements
 

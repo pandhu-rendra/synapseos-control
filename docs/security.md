@@ -1,7 +1,8 @@
 # Security
 
-The application will manage a privileged Docker connection. Phase 0 does not
-connect to Docker or expose state-changing operations.
+The application manages a privileged Docker connection. Phase 1 connects only
+to the configured local Docker endpoint and exposes read-only status and
+information endpoints.
 
 Planned safeguards include:
 
