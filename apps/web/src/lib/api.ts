@@ -63,9 +63,14 @@ export type LogLine = {
 }
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
+const apiToken = import.meta.env.VITE_API_TOKEN ?? ''
+
+function requestHeaders(): HeadersInit {
+  return apiToken ? { Authorization: `Bearer ${apiToken}` } : {}
+}
 
 export async function fetchHealth(): Promise<HealthData> {
-  const response = await fetch(`${apiBaseUrl}/api/v1/health`)
+  const response = await fetch(`${apiBaseUrl}/api/v1/health`, { headers: requestHeaders() })
   if (!response.ok) {
     throw new Error(`Health request failed with status ${response.status}`)
   }
@@ -75,7 +80,7 @@ export async function fetchHealth(): Promise<HealthData> {
 }
 
 export async function fetchDockerStatus(): Promise<DockerStatus> {
-  const response = await fetch(`${apiBaseUrl}/api/v1/docker/status`)
+  const response = await fetch(`${apiBaseUrl}/api/v1/docker/status`, { headers: requestHeaders() })
   const payload = await response.json() as ErrorEnvelope<DockerStatus>
   if (!response.ok || payload.error || !payload.data) {
     throw new Error(payload.error?.message ?? `Docker status request failed with status ${response.status}`)
@@ -85,7 +90,7 @@ export async function fetchDockerStatus(): Promise<DockerStatus> {
 }
 
 export async function fetchDockerInfo(): Promise<DockerInfo> {
-  const response = await fetch(`${apiBaseUrl}/api/v1/docker/info`)
+  const response = await fetch(`${apiBaseUrl}/api/v1/docker/info`, { headers: requestHeaders() })
   const payload = await response.json() as ErrorEnvelope<DockerInfo>
   if (!response.ok || payload.error || !payload.data) {
     throw new Error(payload.error?.message ?? `Docker info request failed with status ${response.status}`)
@@ -95,7 +100,7 @@ export async function fetchDockerInfo(): Promise<DockerInfo> {
 }
 
 export async function fetchDockerSettings(): Promise<DockerSettings> {
-  const response = await fetch(`${apiBaseUrl}/api/v1/settings/docker`)
+  const response = await fetch(`${apiBaseUrl}/api/v1/settings/docker`, { headers: requestHeaders() })
   const payload = await response.json() as ErrorEnvelope<DockerSettings>
   if (!response.ok || payload.error || !payload.data) {
     throw new Error(payload.error?.message ?? `Docker settings request failed with status ${response.status}`)
@@ -106,7 +111,7 @@ export async function fetchDockerSettings(): Promise<DockerSettings> {
 export async function saveDockerSettings(settings: DockerSettings): Promise<DockerSettings> {
   const response = await fetch(`${apiBaseUrl}/api/v1/settings/docker`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...requestHeaders() },
     body: JSON.stringify(settings),
   })
   const payload = await response.json() as ErrorEnvelope<DockerSettings>
@@ -118,7 +123,7 @@ export async function saveDockerSettings(settings: DockerSettings): Promise<Dock
 
 export async function fetchContainers(state = ''): Promise<Container[]> {
   const query = state ? `?state=${encodeURIComponent(state)}` : ''
-  const response = await fetch(`${apiBaseUrl}/api/v1/containers${query}`)
+  const response = await fetch(`${apiBaseUrl}/api/v1/containers${query}`, { headers: requestHeaders() })
   const payload = await response.json() as ErrorEnvelope<Container[]>
   if (!response.ok || payload.error || !payload.data) {
     throw new Error(payload.error?.message ?? `Container request failed with status ${response.status}`)
@@ -128,7 +133,7 @@ export async function fetchContainers(state = ''): Promise<Container[]> {
 }
 
 export async function fetchContainerDetails(id: string): Promise<ContainerDetails> {
-  const response = await fetch(`${apiBaseUrl}/api/v1/containers/${encodeURIComponent(id)}`)
+  const response = await fetch(`${apiBaseUrl}/api/v1/containers/${encodeURIComponent(id)}`, { headers: requestHeaders() })
   const payload = await response.json() as ErrorEnvelope<ContainerDetails>
   if (!response.ok || payload.error || !payload.data) {
     throw new Error(payload.error?.message ?? `Container details request failed with status ${response.status}`)
@@ -140,7 +145,7 @@ export async function fetchContainerDetails(id: string): Promise<ContainerDetail
 export async function performContainerAction(id: string, action: ContainerAction): Promise<void> {
   const response = await fetch(
     `${apiBaseUrl}/api/v1/containers/${encodeURIComponent(id)}/${action}`,
-    { method: 'POST' },
+    { method: 'POST', headers: requestHeaders() },
   )
   const payload = await response.json() as ErrorEnvelope<{ status: string }>
   if (!response.ok || payload.error) {
@@ -151,6 +156,7 @@ export async function performContainerAction(id: string, action: ContainerAction
 export async function fetchContainerLogs(id: string, tail: number): Promise<LogLine[]> {
   const response = await fetch(
     `${apiBaseUrl}/api/v1/containers/${encodeURIComponent(id)}/logs?tail=${tail}`,
+    { headers: requestHeaders() },
   )
   const payload = await response.json() as ErrorEnvelope<LogLine[]>
   if (!response.ok || payload.error || !payload.data) {

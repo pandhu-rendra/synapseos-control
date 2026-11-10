@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/subtle"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -274,9 +275,29 @@ func withCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func withAPIToken(next http.Handler, expectedToken string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodOptions || r.URL.Path == "/api/v1/health" {
+			next.ServeHTTP(w, r)
+			return
+		}
+		const prefix = "Bearer "
+		authorization := r.Header.Get("Authorization")
+		if len(authorization) <= len(prefix) ||
+			!strings.EqualFold(authorization[:len(prefix)], prefix) ||
+			subtle.ConstantTimeCompare([]byte(authorization[len(prefix):]), []byte(expectedToken)) != 1 {
+			writeJSON(w, http.StatusUnauthorized, responseEnvelope{
+				Error: &apiError{Code: "UNAUTHORIZED", Message: "A valid API token is required"},
+			})
 			return
 		}
 		next.ServeHTTP(w, r)

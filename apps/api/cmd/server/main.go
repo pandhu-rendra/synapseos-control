@@ -15,6 +15,7 @@ import (
 
 type config struct {
 	address        string
+	apiToken       string
 	dockerHost     string
 	requestTimeout time.Duration
 }
@@ -22,9 +23,14 @@ type config struct {
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	cfg := config{
-		address:        getenv("SYNAPSEOS_API_ADDRESS", ":8080"),
+		address:        getenv("SYNAPSEOS_API_ADDRESS", "127.0.0.1:8080"),
+		apiToken:       os.Getenv("SYNAPSEOS_API_TOKEN"),
 		dockerHost:     getenv("DOCKER_HOST", "unix:///var/run/docker.sock"),
 		requestTimeout: 10 * time.Second,
+	}
+	if cfg.apiToken == "" {
+		logger.Error("SYNAPSEOS_API_TOKEN must be configured")
+		os.Exit(1)
 	}
 	dockerProvider, err := docker.NewManager(docker.Settings{
 		Host:    cfg.dockerHost,
@@ -38,7 +44,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:              cfg.address,
-		Handler:           newRouter(dockerProvider),
+		Handler:           withAPIToken(newRouter(dockerProvider), cfg.apiToken),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

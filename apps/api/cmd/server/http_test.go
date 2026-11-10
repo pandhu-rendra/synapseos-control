@@ -30,6 +30,42 @@ func TestHealthEndpoint(t *testing.T) {
 	}
 }
 
+func TestAPITokenMiddleware(t *testing.T) {
+	handler := withAPIToken(newRouter(&fakeDockerProvider{}), "test-token")
+
+	unauthorized := httptest.NewRecorder()
+	handler.ServeHTTP(unauthorized, httptest.NewRequest(http.MethodGet, "/api/v1/docker/status", nil))
+	if unauthorized.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status %d, got %d", http.StatusUnauthorized, unauthorized.Code)
+	}
+
+	authorizedRequest := httptest.NewRequest(http.MethodGet, "/api/v1/docker/status", nil)
+	authorizedRequest.Header.Set("Authorization", "Bearer test-token")
+	authorized := httptest.NewRecorder()
+	handler.ServeHTTP(authorized, authorizedRequest)
+	if authorized.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, authorized.Code)
+	}
+}
+
+func TestHealthEndpointDoesNotRequireAPIToken(t *testing.T) {
+	handler := withAPIToken(newRouter(&fakeDockerProvider{}), "test-token")
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/v1/health", nil))
+	if response.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, response.Code)
+	}
+}
+
+func TestOptionsRequestDoesNotRequireAPIToken(t *testing.T) {
+	handler := withAPIToken(newRouter(&fakeDockerProvider{}), "test-token")
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodOptions, "/api/v1/docker/status", nil))
+	if response.Code != http.StatusNoContent {
+		t.Fatalf("expected status %d, got %d", http.StatusNoContent, response.Code)
+	}
+}
+
 func TestDockerStatusEndpoint(t *testing.T) {
 	request := httptest.NewRequest(http.MethodGet, "/api/v1/docker/status", nil)
 	response := httptest.NewRecorder()
